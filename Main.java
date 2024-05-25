@@ -67,38 +67,60 @@ public class Main {
                         }
                         break;
                     case 2:
-                        System.out.println("Pilih item untuk dibeli:");
-                        System.out.println("1) Health Potion (10 HP)");
-                        System.out.println("2) Fire Potion (15 FP)");
-                        System.out.println("3) Water Potion (15 WP)");
-                        System.out.println("4) Wind Potion (15 WP)");
-                        System.out.println("5) Earth Potion (15 EP)");
-                        System.out.println("6) Ice Potion (15 IP)");
-                        System.out.println("7) Keluar");
-                        int buyChoice = scanner.nextInt();
-                        switch (buyChoice) {
-                            case 1:
-                                player.buyItem("Health Potion");
-                                break;
-                            case 2:
-                                player.buyItem("Fire Potion");
-                                break;
-                            case 3:
-                                player.buyItem("Water Potion");
-                                break;
-                            case 4:
-                                player.buyItem("Wind Potion");
-                                break;
-                            case 5:
-                                player.buyItem("Earth Potion");
-                                break;
-                            case 6:
-                                player.buyItem("Ice Potion");
-                                break;
-                            case 7:
-                                break;
-                            default:
-                                System.out.println("Pilihan tidak valid.");
+                        System.out.println("Pilih monster yang akan membeli item:");
+                        for (int i = 0; i < playerMonsters.size(); i++) {
+                            System.out.println((i + 1) + ") " + playerMonsters.get(i).getName() + " - EP: " + playerMonsters.get(i).getExperiencePoints());
+                        }
+                        int monsterChoice = scanner.nextInt();
+                        if (monsterChoice > 0 && monsterChoice <= playerMonsters.size()) {
+                            Monster chosenMonster = playerMonsters.get(monsterChoice - 1);
+                            System.out.println("Pilih item untuk dibeli:");
+                            System.out.println("1) Health Potion (10 EP)");
+                            System.out.println("2) Fire Potion (15 EP)");
+                            System.out.println("3) Water Potion (15 EP)");
+                            System.out.println("4) Wind Potion (15 EP)");
+                            System.out.println("5) Earth Potion (15 EP)");
+                            System.out.println("6) Ice Potion (15 EP)");
+                            System.out.println("7) Keluar");
+                            int buyChoice = scanner.nextInt();
+                            switch (buyChoice) {
+                                case 1:
+                                    if (player.buyItem(chosenMonster, "Health Potion")) {
+                                        System.out.println("Health Potion berhasil dibeli untuk " + chosenMonster.getName());
+                                    }
+                                    break;
+                                case 2:
+                                    if (player.buyItem(chosenMonster, "Fire Potion")) {
+                                        System.out.println("Fire Potion berhasil dibeli untuk " + chosenMonster.getName());
+                                    }
+                                    break;
+                                case 3:
+                                    if (player.buyItem(chosenMonster, "Water Potion")) {
+                                        System.out.println("Water Potion berhasil dibeli untuk " + chosenMonster.getName());
+                                    }
+                                    break;
+                                case 4:
+                                    if (player.buyItem(chosenMonster, "Wind Potion")) {
+                                        System.out.println("Wind Potion berhasil dibeli untuk " + chosenMonster.getName());
+                                    }
+                                    break;
+                                case 5:
+                                    if (player.buyItem(chosenMonster, "Earth Potion")) {
+                                        System.out.println("Earth Potion berhasil dibeli untuk " + chosenMonster.getName());
+                                    }
+                                    break;
+                                case 6:
+                                    if (player.buyItem(chosenMonster, "Ice Potion")) {
+                                        System.out.println("Ice Potion berhasil dibeli untuk " + chosenMonster.getName());
+                                    }
+                                    break;
+                                case 7:
+                                    break;
+                                default:
+                                    System.out.println("Pilihan tidak valid.");
+                            }
+                        } else {
+                            System.out.println("Pilihan tidak valid.");
                         }
                         break;
                     case 3:
