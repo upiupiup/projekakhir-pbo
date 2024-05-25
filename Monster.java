@@ -4,28 +4,29 @@ public abstract class Monster {
     protected String name;
     protected int level;
     protected int healthPoints;
+    protected int maxHealthPoints; // New field to store maximum HP
     protected int experiencePoints;
     protected Element element;
     protected ElementalFeature elementalFeature;
     protected boolean isDefending;
-
 
     public Monster(String name, int level, Element element, ElementalFeature elementalFeature) {
         this.name = name;
         this.level = level;
         this.element = element;
         this.elementalFeature = elementalFeature;
-        this.healthPoints = healthPoints; // Default health points
         this.experiencePoints = 0; // Default experience points
+        this.isDefending = false; // Default defending state
+        this.maxHealthPoints = healthPoints; // Initialize max HP
     }
 
-    public abstract void attack(Monster opponent);
-    public abstract void defend();
+    public abstract String attack(Monster opponent);
+    public abstract String defend();
     public abstract void addEP(int amount);
     public abstract void levelUp() throws ValueOutOfRangeException;
     public abstract void changeElement(Element newElement, ElementalFeature newElementalFeature) throws InvalidElementChangeException;
-    public abstract void specialAttack (Monster opponent);
-    public abstract void elementalAttack(Monster opponent);
+    public abstract String specialAttack(Monster opponent);
+    public abstract String elementalAttack(Monster opponent);
 
     public void performElementalAttack(Monster opponent) {
         elementalFeature.elementalAttack(this, opponent);
@@ -75,14 +76,16 @@ public abstract class Monster {
     public void setElementalFeature(ElementalFeature elementalFeature) {
         this.elementalFeature = elementalFeature;
     }
-    
+
     public boolean isDefending() {
         return isDefending;
     }
-    
+
     public void setDefending(boolean isDefending) {
         this.isDefending = isDefending;
     }
 
-
+    public void restoreHealth() {
+        this.healthPoints = this.maxHealthPoints; // Restore HP to max HP
+    }
 }
