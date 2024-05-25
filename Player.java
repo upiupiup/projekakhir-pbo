@@ -17,7 +17,7 @@ public class Player implements Battle {
         this.monsters = monsters;
         this.currentMonster = monsters.get(0); // Default current monster
         this.homeBase = homeBase;
-        this.inventory = new ArrayList<>(); // Inisialisasi inventory
+        this.inventory = new ArrayList<>(); // Initialize inventory
         this.scanner = new Scanner(System.in);
         this.random = new Random();
     }
@@ -61,11 +61,21 @@ public class Player implements Battle {
         }
     }
 
-    public void buyItem(String itemName) {
-        Item item = homeBase.buyItem(this, itemName); // Gunakan `this` untuk referensi ke Player
+    public boolean buyItem(Monster monster, String itemName) {
+        Item item = homeBase.buyItem(this, monster, itemName); // Gunakan `this` untuk referensi ke Player
         if (item != null) {
             inventory.add(item); // Tambahkan item yang dibeli ke inventory
+            return true;
         }
+        return false;
+    }
+
+    public boolean levelUpMonster(Monster monster) {
+        return homeBase.levelUpMonster(monster);
+    }
+
+    public void healAllMonsters() {
+        homeBase.healAllMonsters(monsters);
     }
 
     public List<Item> getInventory() {
@@ -75,16 +85,23 @@ public class Player implements Battle {
     public Monster getCurrentMonster() {
         return currentMonster;
     }
+
+    public List<Monster> getMonsters() {
+        return monsters;
+    }
+
+    public void setDungeonMonsters(List<Monster> monsters) {
+        this.monsters = monsters;
+        if (!monsters.isEmpty()) {
+            this.currentMonster = monsters.get(0);
+        }
+    }
     
+
     // In Player.java
     public String getCurrentMonsterName() {
         return currentMonster.getName();
     }
-    
-    public List<Monster> getMonsters(){
-        return monsters;
-    }
-
 
     public void battle(Monster wildMonster) {
         boolean battleOver = false;
@@ -92,7 +109,6 @@ public class Player implements Battle {
         currentMonster = monsters.get(currentMonsterIndex);
 
         while (!battleOver) {
-            // Player's turn
             System.out.println("Choose action: 1) Attack 2) Special Attack 3) Elemental Attack 4) Defend 5) Use Item 6) Run");
             int choice = scanner.nextInt();
 
@@ -140,12 +156,8 @@ public class Player implements Battle {
 
             if (wildMonster.getHealthPoints() <= 0) {
                 System.out.println(wildMonster.getName() + " is defeated!");
-                currentMonster.addEP(50); // Menambahkan EP setiap kali menang
-                try {
-                    currentMonster.levelUp(); // Naikkan level jika cukup EP
-                } catch (ValueOutOfRangeException e) {
-                    System.out.println(e.getMessage());
-                }
+                currentMonster.addEP(50); // Add EP to the current monster
+                System.out.println(currentMonster.getName() + " berhasil mendapatkan 50 EP!");
                 battleOver = true;
                 break;
             }
@@ -183,7 +195,5 @@ public class Player implements Battle {
                 }
             }
         }
-        
-        
     }
 }
