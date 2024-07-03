@@ -5,11 +5,20 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
+import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.UnsupportedAudioFileException;
 
 public class GUIGame extends javax.swing.JFrame {
     private ButtonGroup buttonGroup1;
@@ -41,15 +50,57 @@ public class GUIGame extends javax.swing.JFrame {
     private BufferedWriter battleLogWriter;
     private JPanel playerPanel;
     private JPanel enemyPanel;
+    private JPanel battlePanel;
+    private Path logFilePath;
+
 
     public GUIGame() {
         initComponents();
         homeBase = new HomeBase();
         
+        logFilePath = Paths.get("C:", "Users","Aufii","Documents","Informatika","SEM 2","PBO","projek akhir", "progressGame.txt");
+        createDirectoriesIfNotExist(logFilePath.getParent());
+        
         try {
-            battleLogWriter = new BufferedWriter(new FileWriter("battle_log.txt", true));
+            battleLogWriter = new BufferedWriter(new FileWriter(logFilePath.toString(), true));
         } catch (IOException e) {
             e.printStackTrace();
+        }
+        
+        playBackgroundMusic(System.getProperty("user.home") + "/Downloads/sound_homeawal.wav");
+    }
+    
+    public void playSound(String soundFile) {
+        try {
+            File audioFile = new File(soundFile);
+            if (!audioFile.exists()) {
+                System.out.println("File audio tidak ditemukan: " + soundFile);
+                return;
+            }
+            AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(audioFile);
+            Clip clip = AudioSystem.getClip();
+            clip.open(audioInputStream);
+            clip.start();
+            System.out.println("Memutar suara: " + soundFile);
+        } catch (UnsupportedAudioFileException | IOException | LineUnavailableException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    public void playBackgroundMusic(String musicFile) {
+        try {
+            File audioFile = new File(musicFile);
+            if (!audioFile.exists()) {
+                System.out.println("File musik tidak ditemukan: " + musicFile);
+                return;
+            }
+            AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(audioFile);
+            Clip clip = AudioSystem.getClip();
+            clip.open(audioInputStream);
+            clip.loop(Clip.LOOP_CONTINUOUSLY);
+            System.out.println("Memutar musik latar belakang: " + musicFile);
+        } catch (UnsupportedAudioFileException | IOException | LineUnavailableException ex) {
+            ex.printStackTrace();
         }
     }
 
@@ -59,7 +110,7 @@ public class GUIGame extends javax.swing.JFrame {
         jFrame1 = new javax.swing.JFrame();
         jFrame2 = new javax.swing.JFrame();
         jSplitPane1 = new javax.swing.JSplitPane();
-        jPanel1 = new BackgroundPane1(System.getProperty("user.home") + "/Downloads/pokemon1.jpg");
+        jPanel1 = new BackgroundPane1(System.getProperty("user.home") + "/Downloads/pokemon22.jpg");
         jLabel1 = new javax.swing.JLabel();
         actionExitGame = new javax.swing.JToggleButton();
         actionPlayGame = new javax.swing.JToggleButton();
@@ -77,17 +128,27 @@ public class GUIGame extends javax.swing.JFrame {
 
         jPanel1.setLayout(new BorderLayout());
 
-        jLabel1.setFont(new java.awt.Font("Tahoma", 1, 30));
+        jLabel1.setFont(new java.awt.Font("Tahoma", Font.BOLD, 50));
         jLabel1.setForeground(new java.awt.Color(255, 255, 255));
         jLabel1.setHorizontalAlignment(SwingConstants.CENTER);
-        jLabel1.setText("GAME POKEMON UHUYY");
+        jLabel1.setVerticalAlignment(SwingConstants.CENTER);
+        jLabel1.setText("POKEMON UHUY");
         jLabel1.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
+
+        // Mengatur background panel untuk judul
+        JPanel titlePanel = new JPanel();
+        titlePanel.setBackground(new java.awt.Color(70, 130, 180, 150)); // Warna lebih cerah dan semi-transparan
+        titlePanel.setLayout(new FlowLayout(FlowLayout.CENTER, 0, 10)); // Menyesuaikan panjang dengan teks
+        titlePanel.setPreferredSize(new Dimension(jLabel1.getPreferredSize().width + 20, jLabel1.getPreferredSize().height + 20)); // Sesuaikan ukuran panel
+
+        titlePanel.add(jLabel1);
 
         actionExitGame.setFont(new java.awt.Font("Tahoma", 1, 25));
         actionExitGame.setText("EXIT");
         actionExitGame.setPreferredSize(new Dimension(150, 50));
         actionExitGame.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
+                playSound(System.getProperty("user.home") + "/Downloads/click_button.wav"); // Pastikan path ke file WAV benar
                 actionExitGameActionPerformed(evt);
             }
         });
@@ -97,6 +158,7 @@ public class GUIGame extends javax.swing.JFrame {
         actionPlayGame.setPreferredSize(new Dimension(150, 50));
         actionPlayGame.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
+                playSound(System.getProperty("user.home") + "/Downloads/click_button.wav"); // Pastikan path ke file WAV benar
                 actionPlayGameActionPerformed(evt);
             }
         });
@@ -106,24 +168,41 @@ public class GUIGame extends javax.swing.JFrame {
         actionHelpGame.setPreferredSize(new Dimension(150, 50));
         actionHelpGame.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
+                playSound(System.getProperty("user.home") + "/Downloads/click_button.wav"); // Pastikan path ke file WAV benar
                 actionHelpGameActionPerformed(evt);
             }
         });
 
         JPanel buttonPanel = new JPanel();
         buttonPanel.setOpaque(false);
-        buttonPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 100, 300));
-        buttonPanel.add(actionPlayGame);
-        buttonPanel.add(actionHelpGame);
-        buttonPanel.add(actionExitGame);
+        buttonPanel.setLayout(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
 
-        jPanel1.add(jLabel1, BorderLayout.NORTH);
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        buttonPanel.add(actionPlayGame, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        buttonPanel.add(actionHelpGame, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        buttonPanel.add(actionExitGame, gbc);
+
+        jPanel1.add(titlePanel, BorderLayout.NORTH);
         jPanel1.add(buttonPanel, BorderLayout.CENTER);
 
+        // Mengatur judul menu
         jMenu1.setText("Homebase");
+        jMenu1.setFont(new java.awt.Font("Tahoma", Font.BOLD, 20));
+        jMenu1.setBackground(new java.awt.Color(70, 130, 180, 150)); // Warna lebih cerah dan semi-transparan
         jMenuBar1.add(jMenu1);
 
         jMenu2.setText("Dungeon");
+        jMenu2.setFont(new java.awt.Font("Tahoma", Font.BOLD, 20));
+        jMenu2.setBackground(new java.awt.Color(70, 130, 180, 150)); // Warna lebih cerah dan semi-transparan
         jMenuBar1.add(jMenu2);
 
         setJMenuBar(jMenuBar1);
@@ -142,244 +221,111 @@ public class GUIGame extends javax.swing.JFrame {
         pack();
     }
 
-private void actionPlayGameActionPerformed(java.awt.event.ActionEvent evt) {
-    List<Monster> monsterList = new ArrayList<>();
-    monsterList.add(new ConcreteMonster("Ditto", 5, 48, Element.WIND, new WindFeature()));
-    monsterList.add(new ConcreteMonster("Bulbasaur", 5, 58, Element.EARTH, new EarthFeature()));
-    monsterList.add(new ConcreteMonster("Charmander", 5, 78, Element.FIRE, new FireFeature()));
-    monsterList.add(new ConcreteMonster("Squirtle", 5, 79, Element.WATER, new WaterFeature()));
-    monsterList.add(new ConcreteMonster("Pikachu", 5, 60, Element.FIRE, new FireFeature()));
-    monsterList.add(new ConcreteMonster("Sandslash", 5, 70, Element.ICE, new IceFeature()));
-    monsterList.add(new ConcreteMonster("Golem", 5, 80, Element.EARTH, new EarthFeature()));
-    monsterList.add(new ConcreteMonster("Spheal", 5, 90, Element.WATER, new WaterFeature()));
+    private void actionPlayGameActionPerformed(java.awt.event.ActionEvent evt) {
+        List<Monster> monsterList = new ArrayList<>();
+        monsterList.add(new ConcreteMonster("Ditto", 5, 48, Element.WIND, new WindFeature()));
+        monsterList.add(new ConcreteMonster("Bulbasaur", 5, 58, Element.EARTH, new EarthFeature()));
+        monsterList.add(new ConcreteMonster("Charmander", 5, 78, Element.FIRE, new FireFeature()));
+        monsterList.add(new ConcreteMonster("Squirtle", 5, 79, Element.WATER, new WaterFeature()));
+        monsterList.add(new ConcreteMonster("Pikachu", 5, 60, Element.FIRE, new FireFeature()));
+        monsterList.add(new ConcreteMonster("Sandslash", 5, 70, Element.ICE, new IceFeature()));
+        monsterList.add(new ConcreteMonster("Golem", 5, 80, Element.EARTH, new EarthFeature()));
+        monsterList.add(new ConcreteMonster("Spheal", 5, 90, Element.WATER, new WaterFeature()));
 
-    HomeBase homeBase = new HomeBase();
-    player = new Player(monsterList, homeBase);
+        HomeBase homeBase = new HomeBase();
+        player = new Player(monsterList, homeBase);
 
-    JOptionPane.showMessageDialog(this, "Permainan dimulai. Silakan pilih aksi di Homebase.");
-    showHomebase();
-}
-
-
-private void showHomebase() {
-     JFrame homebaseFrame = new JFrame("Homebase");
-    homebaseFrame.setSize(1366, 768);
-    homebaseFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-    BackgroundPane1 homebasePanel = new BackgroundPane1(System.getProperty("user.home") + "/Downloads/pokemon1.jpg");
-    homebasePanel.setLayout(new BorderLayout());
-
-    JLabel homebaseLabel = new JLabel("Homebase");
-    homebaseLabel.setFont(new java.awt.Font("Tahoma", 1, 30));
-    homebaseLabel.setForeground(new java.awt.Color(255, 255, 255));
-    homebaseLabel.setHorizontalAlignment(SwingConstants.CENTER);
-
-    JButton lihatMonsterButton = new JButton("Lihat Monster");
-    JButton beliItemButton = new JButton("Beli Item");
-    JButton gunakanItemButton = new JButton("Pulihkan HP");
-    JButton pergiKeDungeonButton = new JButton("Pergi ke Dungeon");
-    JButton levelUpButton = new JButton("Level Up");
-    JButton evolveButton = new JButton("Evolve Monster");
-    JButton keluarButton = new JButton("Keluar");
-
-    lihatMonsterButton.setFont(new java.awt.Font("Tahoma", 1, 25));
-    lihatMonsterButton.setPreferredSize(new Dimension(200, 70));
-    beliItemButton.setFont(new java.awt.Font("Tahoma", 1, 25));
-    beliItemButton.setPreferredSize(new Dimension(200, 70));
-    gunakanItemButton.setFont(new java.awt.Font("Tahoma", 1, 25));
-    gunakanItemButton.setPreferredSize(new Dimension(200, 70));
-    pergiKeDungeonButton.setFont(new java.awt.Font("Tahoma", 1, 25));
-    pergiKeDungeonButton.setPreferredSize(new Dimension(200, 70));
-    levelUpButton.setFont(new java.awt.Font("Tahoma", 1, 25));
-    levelUpButton.setPreferredSize(new Dimension(200, 70));
-    evolveButton.setFont(new java.awt.Font("Tahoma", 1, 25));
-    evolveButton.setPreferredSize(new Dimension(200, 70));
-    keluarButton.setFont(new java.awt.Font("Tahoma", 1, 25));
-    keluarButton.setPreferredSize(new Dimension(200, 70));
-
-    JPanel buttonPanel = new JPanel();
-    buttonPanel.setOpaque(false);
-    buttonPanel.setLayout(new GridLayout(4, 2, 20, 20));
-    buttonPanel.add(lihatMonsterButton);
-    buttonPanel.add(beliItemButton);
-    buttonPanel.add(gunakanItemButton);
-    buttonPanel.add(levelUpButton);
-    buttonPanel.add(evolveButton);
-    buttonPanel.add(pergiKeDungeonButton);
-    buttonPanel.add(keluarButton);
-    
-    evolveButton.addActionListener(new ActionListener() {
-    public void actionPerformed(ActionEvent e) {
-        List<Monster> monsters = player.getMonsters();
-        String[] monsterNames = new String[monsters.size()];
-        for (int i = 0; i < monsters.size(); i++) {
-            monsterNames[i] = monsters.get(i).getName();
-        }
-
-        String chosenMonsterName = (String) JOptionPane.showInputDialog(homebaseFrame,
-                "Pilih monster untuk evolusi:",
-                "Pilih Monster",
-                JOptionPane.PLAIN_MESSAGE,
-                null,
-                monsterNames,
-                monsterNames[0]);
-
-        if (chosenMonsterName != null) {
-            Monster chosenMonster = null;
-            for (Monster monster : monsters) {
-                if (monster.getName().equals(chosenMonsterName)) {
-                    chosenMonster = monster;
-                    break;
-                }
-            }
-
-            if (chosenMonster != null) {
-                List<Element> possibleEvolutions = homeBase.getPossibleEvolutions(chosenMonster.getElement());
-                String[] evolutionOptions = new String[possibleEvolutions.size()];
-                for (int i = 0; i < possibleEvolutions.size(); i++) {
-                    evolutionOptions[i] = possibleEvolutions.get(i).toString();
-                }
-
-                String chosenEvolution = (String) JOptionPane.showInputDialog(homebaseFrame,
-                        "Pilih evolusi untuk " + chosenMonster.getName() + ":",
-                        "Pilih Evolusi",
-                        JOptionPane.PLAIN_MESSAGE,
-                        null,
-                        evolutionOptions,
-                        evolutionOptions[0]);
-
-                if (chosenEvolution != null) {
-                    Element newElement = Element.valueOf(chosenEvolution);
-                    boolean evolutionSuccess = homeBase.evolveMonster(chosenMonster, newElement);
-                    if (evolutionSuccess) {
-                        JOptionPane.showMessageDialog(homebaseFrame, chosenMonster.getName() + " berhasil berevolusi menjadi elemen " + newElement + "!");
-                    } else {
-                        JOptionPane.showMessageDialog(homebaseFrame, chosenMonster.getName() + " tidak memiliki EP yang cukup untuk berevolusi!");
-                    }
-                }
-            }
-        }
+        logAction("Permainan dimulai. Silakan pilih aksi di Homebase.");
+        JOptionPane.showMessageDialog(this, "Permainan dimulai. Silakan pilih aksi di Homebase.");
+        showHomebase();
     }
-});
 
+    private void showHomebase() {
+        player.restoreMonsters(); // Restore the original list of monsters before showing homebase
 
-    lihatMonsterButton.addActionListener(new ActionListener() {
-        public void actionPerformed(ActionEvent e) {
-            StringBuilder monsterInfo = new StringBuilder("Monster yang Anda miliki:\n");
-            for (Monster monster : player.getMonsters()) {
-                monsterInfo.append(monster.getName()).append(" - Level: ")
-                        .append(monster.getLevel()).append(", HP: ")
-                        .append(monster.getHealthPoints()).append(", EP: ")
-                        .append(monster.getExperiencePoints()).append("\n");
-            }
-            JOptionPane.showMessageDialog(homebaseFrame, monsterInfo.toString());
-        }
-    });
+        JFrame homebaseFrame = new JFrame("Homebase");
+        homebaseFrame.setSize(1366, 768);
+        homebaseFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-    beliItemButton.addActionListener(new ActionListener() {
-        public void actionPerformed(ActionEvent e) {
-            List<Monster> monsters = player.getMonsters();
-            String[] monsterNames = new String[monsters.size()];
-            for (int i = 0; i < monsters.size(); i++) {
-                monsterNames[i] = monsters.get(i).getName();
-            }
+        BackgroundPane1 homebasePanel = new BackgroundPane1(System.getProperty("user.home") + "/Downloads/pokemon Homebase.jpg");
+        homebasePanel.setLayout(new BorderLayout());
 
-            String chosenMonsterName = (String) JOptionPane.showInputDialog(homebaseFrame,
-                    "Pilih monster yang akan membeli item:",
-                    "Pilih Monster",
-                    JOptionPane.PLAIN_MESSAGE,
-                    null,
-                    monsterNames,
-                    monsterNames[0]);
+        JLabel homebaseLabel = new JLabel("Homebase");
+        homebaseLabel.setFont(new java.awt.Font("Tahoma", 1, 30));
+        homebaseLabel.setForeground(new java.awt.Color(255, 255, 255));
+        homebaseLabel.setHorizontalAlignment(SwingConstants.CENTER);
 
-            if (chosenMonsterName != null) {
-                Monster chosenMonster = null;
-                for (Monster monster : monsters) {
-                    if (monster.getName().equals(chosenMonsterName)) {
-                        chosenMonster = monster;
-                        break;
-                    }
+        JButton lihatMonsterButton = new JButton("Monster's Info");
+        JButton beliItemButton = new JButton("Buy Item");
+        JButton gunakanItemButton = new JButton("Restore HP");
+        JButton pergiKeDungeonButton = new JButton("Go to Dungeon");
+        JButton levelUpButton = new JButton("Level Up");
+        JButton evolveButton = new JButton("Evolve Monster");
+        JButton keluarButton = new JButton("Exit");
+
+        Dimension buttonSize = new Dimension(200, 50); // Set smaller button size
+
+        lihatMonsterButton.setFont(new java.awt.Font("Tahoma", 1, 20));
+        lihatMonsterButton.setPreferredSize(buttonSize);
+        beliItemButton.setFont(new java.awt.Font("Tahoma", 1, 20));
+        beliItemButton.setPreferredSize(buttonSize);
+        gunakanItemButton.setFont(new java.awt.Font("Tahoma", 1, 20));
+        gunakanItemButton.setPreferredSize(buttonSize);
+        pergiKeDungeonButton.setFont(new java.awt.Font("Tahoma", 1, 20));
+        pergiKeDungeonButton.setPreferredSize(buttonSize);
+        levelUpButton.setFont(new java.awt.Font("Tahoma", 1, 20));
+        levelUpButton.setPreferredSize(buttonSize);
+        evolveButton.setFont(new java.awt.Font("Tahoma", 1, 20));
+        evolveButton.setPreferredSize(buttonSize);
+        keluarButton.setFont(new java.awt.Font("Tahoma", 1, 20));
+        keluarButton.setPreferredSize(buttonSize);
+
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setOpaque(false);
+        buttonPanel.setLayout(new GridBagLayout()); // Using GridBagLayout for better control
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10); // Padding around buttons
+
+        // First row (1 button)
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 2;
+        gbc.anchor = GridBagConstraints.CENTER;
+        buttonPanel.add(lihatMonsterButton, gbc);
+
+        // Second row (2 buttons)
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.gridwidth = 1;
+        buttonPanel.add(beliItemButton, gbc);
+        gbc.gridx = 1;
+        buttonPanel.add(gunakanItemButton, gbc);
+
+        // Third row (2 buttons)
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        buttonPanel.add(levelUpButton, gbc);
+        gbc.gridx = 1;
+        buttonPanel.add(evolveButton, gbc);
+
+        // Fourth row (2 buttons)
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+        buttonPanel.add(keluarButton, gbc);
+        gbc.gridx = 1;
+        buttonPanel.add(pergiKeDungeonButton, gbc);
+
+        evolveButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                playSound(System.getProperty("user.home") + "/Downloads/click_button.wav"); // Pastikan path ke file WAV benar
+                List<Monster> monsters = player.getMonsters();
+                String[] monsterNames = new String[monsters.size()];
+                for (int i = 0; i < monsters.size(); i++) {
+                    monsterNames[i] = monsters.get(i).getName();
                 }
 
-                if (chosenMonster != null) {
-                    String[] items = {"Health Potion", "Fire Potion", "Water Potion", "Wind Potion", "Earth Potion", "Ice Potion"};
-                    String chosenItem = (String) JOptionPane.showInputDialog(homebaseFrame,
-                            "Pilih item untuk dibeli:",
-                            "Beli Item",
-                            JOptionPane.PLAIN_MESSAGE,
-                            null,
-                            items,
-                            items[0]);
-
-                    if (chosenItem != null) {
-                        boolean purchaseSuccess = player.buyItem(chosenMonster, chosenItem);
-                        if (purchaseSuccess) {
-                            JOptionPane.showMessageDialog(homebaseFrame, "Item " + chosenItem + " berhasil dibeli untuk " + chosenMonster.getName() + "!");
-                        } else {
-                            JOptionPane.showMessageDialog(homebaseFrame, chosenMonster.getName() + " tidak memiliki EP yang cukup untuk membeli item " + chosenItem + "!");
-                        }
-                    }
-                }
-            }
-        }
-    });
-
-    gunakanItemButton.addActionListener(new ActionListener() {
-        public void actionPerformed(ActionEvent e) {
-            player.healAllMonsters();
-            JOptionPane.showMessageDialog(homebaseFrame, "Semua monster telah dipulihkan ke HP penuh!");
-        }
-    });
-
-    levelUpButton.addActionListener(new ActionListener() {
-        public void actionPerformed(ActionEvent e) {
-            List<Monster> monsters = player.getMonsters();
-            String[] monsterNames = new String[monsters.size()];
-            for (int i = 0; i < monsters.size(); i++) {
-                monsterNames[i] = monsters.get(i).getName();
-            }
-
-            String chosenMonsterName = (String) JOptionPane.showInputDialog(homebaseFrame,
-                    "Pilih monster yang akan dinaikkan levelnya:",
-                    "Pilih Monster",
-                    JOptionPane.PLAIN_MESSAGE,
-                    null,
-                    monsterNames,
-                    monsterNames[0]);
-
-            if (chosenMonsterName != null) {
-                Monster chosenMonster = null;
-                for (Monster monster : monsters) {
-                    if (monster.getName().equals(chosenMonsterName)) {
-                        chosenMonster = monster;
-                        break;
-                    }
-                }
-
-                if (chosenMonster != null) {
-                    boolean levelUpSuccess = player.levelUpMonster(chosenMonster);
-                    if (levelUpSuccess) {
-                        JOptionPane.showMessageDialog(homebaseFrame, chosenMonster.getName() + " berhasil naik level!");
-                    } else {
-                        JOptionPane.showMessageDialog(homebaseFrame, chosenMonster.getName() + " tidak memiliki EP yang cukup untuk naik level!");
-                    }
-                }
-            }
-        }
-    });
-
-    pergiKeDungeonButton.addActionListener(new ActionListener() {
-        public void actionPerformed(ActionEvent e) {
-            List<Monster> monsters = player.getMonsters();
-            String[] monsterNames = new String[monsters.size()];
-            for (int i = 0; i < monsters.size(); i++) {
-                monsterNames[i] = monsters.get(i).getName();
-            }
-
-            List<Monster> chosenMonsters = new ArrayList<>();
-            for (int i = 0; i < 3; i++) {
                 String chosenMonsterName = (String) JOptionPane.showInputDialog(homebaseFrame,
-                        "Pilih monster " + (i + 1) + " untuk pergi ke dungeon:",
+                        "Pilih monster untuk evolusi:",
                         "Pilih Monster",
                         JOptionPane.PLAIN_MESSAGE,
                         null,
@@ -387,53 +333,233 @@ private void showHomebase() {
                         monsterNames[0]);
 
                 if (chosenMonsterName != null) {
+                    Monster chosenMonster = null;
                     for (Monster monster : monsters) {
                         if (monster.getName().equals(chosenMonsterName)) {
-                            chosenMonsters.add(monster);
+                            chosenMonster = monster;
                             break;
+                        }
+                    }
+
+                    if (chosenMonster != null) {
+                        List<Element> possibleEvolutions = homeBase.getPossibleEvolutions(chosenMonster.getElement());
+                        String[] evolutionOptions = new String[possibleEvolutions.size()];
+                        for (int i = 0; i < possibleEvolutions.size(); i++) {
+                            evolutionOptions[i] = possibleEvolutions.get(i).toString();
+                        }
+
+                        String chosenEvolution = (String) JOptionPane.showInputDialog(homebaseFrame,
+                                "Pilih evolusi untuk " + chosenMonster.getName() + ":",
+                                "Pilih Evolusi",
+                                JOptionPane.PLAIN_MESSAGE,
+                                null,
+                                evolutionOptions,
+                                evolutionOptions[0]);
+
+                        if (chosenEvolution != null) {
+                            Element newElement = Element.valueOf(chosenEvolution);
+                            boolean evolutionSuccess = homeBase.evolveMonster(chosenMonster, newElement);
+                            if (evolutionSuccess) {
+                                String log = chosenMonster.getName() + " berhasil berevolusi menjadi elemen " + newElement + "!";
+                                logAction(log);
+                                JOptionPane.showMessageDialog(homebaseFrame, log);
+                            } else {
+                                String log = chosenMonster.getName() + " tidak memiliki EP yang cukup untuk berevolusi!";
+                                logAction(log);
+                                JOptionPane.showMessageDialog(homebaseFrame, log);
+                            }
                         }
                     }
                 }
             }
+        });
 
-            if (chosenMonsters.size() == 3) {
-                player.setDungeonMonsters(chosenMonsters); // Set the chosen monsters to the player
-                dungeon = new Dungeon();
-                JOptionPane.showMessageDialog(homebaseFrame, "Anda pergi ke dungeon!");
-                showDungeon();
-                homebaseFrame.dispose();
-            } else {
-                JOptionPane.showMessageDialog(homebaseFrame, "Anda harus memilih 3 monster untuk pergi ke dungeon.");
+        lihatMonsterButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                playSound(System.getProperty("user.home") + "/Downloads/click_button.wav"); // Pastikan path ke file WAV benar
+                StringBuilder monsterInfo = new StringBuilder("Monster yang Anda miliki:\n");
+                for (Monster monster : player.getMonsters()) {
+                    monsterInfo.append(monster.getName()).append(" - Level: ")
+                            .append(monster.getLevel()).append(", HP: ")
+                            .append(monster.getHealthPoints()).append(", EP: ")
+                            .append(monster.getExperiencePoints()).append("\n");
+                }
+                logAction("Menampilkan informasi monster:\n" + monsterInfo.toString());
+                JOptionPane.showMessageDialog(homebaseFrame, monsterInfo.toString());
             }
-        }
-    });
+        });
 
-    keluarButton.addActionListener(new ActionListener() {
-        public void actionPerformed(ActionEvent e) {
-            int confirm = JOptionPane.showConfirmDialog(homebaseFrame, "Apakah Anda ingin keluar?", "Keluar", JOptionPane.YES_NO_OPTION);
-            if (confirm == JOptionPane.YES_OPTION) {
-                System.exit(0);
+        beliItemButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                playSound(System.getProperty("user.home") + "/Downloads/click_button.wav"); // Pastikan path ke file WAV benar
+                List<Monster> monsters = player.getMonsters();
+                String[] monsterNames = new String[monsters.size()];
+                for (int i = 0; i < monsters.size(); i++) {
+                    monsterNames[i] = monsters.get(i).getName();
+                }
+
+                String chosenMonsterName = (String) JOptionPane.showInputDialog(homebaseFrame,
+                        "Pilih monster yang akan membeli item:",
+                        "Pilih Monster",
+                        JOptionPane.PLAIN_MESSAGE,
+                        null,
+                        monsterNames,
+                        monsterNames[0]);
+
+                if (chosenMonsterName != null) {
+                    Monster chosenMonster = null;
+                    for (Monster monster : monsters) {
+                        if (monster.getName().equals(chosenMonsterName)) {
+                            chosenMonster = monster;
+                            break;
+                        }
+                    }
+
+                    if (chosenMonster != null) {
+                        String[] items = {"Health Potion", "Fire Potion", "Water Potion", "Wind Potion", "Earth Potion", "Ice Potion"};
+                        String chosenItem = (String) JOptionPane.showInputDialog(homebaseFrame,
+                                "Pilih item untuk dibeli:",
+                                "Beli Item",
+                                JOptionPane.PLAIN_MESSAGE,
+                                null,
+                                items,
+                                items[0]);
+
+                        if (chosenItem != null) {
+                            boolean purchaseSuccess = player.buyItem(chosenMonster, chosenItem);
+                            if (purchaseSuccess) {
+                                String log = "Item " + chosenItem + " berhasil dibeli untuk " + chosenMonster.getName() + "!";
+                                logAction(log);
+                                JOptionPane.showMessageDialog(homebaseFrame, log);
+                            } else {
+                                String log = chosenMonster.getName() + " tidak memiliki EP yang cukup untuk membeli item " + chosenItem + "!";
+                                logAction(log);
+                                JOptionPane.showMessageDialog(homebaseFrame, log);
+                            }
+                        }
+                    }
+                }
             }
-        }
-    });
+        });
 
-    homebasePanel.add(homebaseLabel, BorderLayout.NORTH);
-    homebasePanel.add(buttonPanel, BorderLayout.CENTER);
+        gunakanItemButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                playSound(System.getProperty("user.home") + "/Downloads/click_button.wav"); // Pastikan path ke file WAV benar
+                player.healAllMonsters();
+                logAction("Semua monster telah dipulihkan ke HP penuh!");
+                JOptionPane.showMessageDialog(homebaseFrame, "Semua monster telah dipulihkan ke HP penuh!");
+            }
+        });
 
-    homebaseFrame.add(homebasePanel);
-    homebaseFrame.setVisible(true);
-}
+        levelUpButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                playSound(System.getProperty("user.home") + "/Downloads/click_button.wav"); // Pastikan path ke file WAV benar
+                List<Monster> monsters = player.getMonsters();
+                String[] monsterNames = new String[monsters.size()];
+                for (int i = 0; i < monsters.size(); i++) {
+                    monsterNames[i] = monsters.get(i).getName();
+                }
 
+                String chosenMonsterName = (String) JOptionPane.showInputDialog(homebaseFrame,
+                        "Pilih monster yang akan dinaikkan levelnya:",
+                        "Pilih Monster",
+                        JOptionPane.PLAIN_MESSAGE,
+                        null,
+                        monsterNames,
+                        monsterNames[0]);
 
+                if (chosenMonsterName != null) {
+                    Monster chosenMonster = null;
+                    for (Monster monster : monsters) {
+                        if (monster.getName().equals(chosenMonsterName)) {
+                            chosenMonster = monster;
+                            break;
+                        }
+                    }
 
+                    if (chosenMonster != null) {
+                        boolean levelUpSuccess = player.levelUpMonster(chosenMonster);
+                        if (levelUpSuccess) {
+                            String log = chosenMonster.getName() + " berhasil naik level!";
+                            logAction(log);
+                            JOptionPane.showMessageDialog(homebaseFrame, log);
+                        } else {
+                            String log = chosenMonster.getName() + " tidak memiliki EP yang cukup untuk naik level!";
+                            logAction(log);
+                            JOptionPane.showMessageDialog(homebaseFrame, log);
+                        }
+                    }
+                }
+            }
+        });
 
+        pergiKeDungeonButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                playSound(System.getProperty("user.home") + "/Downloads/click_button.wav"); // Pastikan path ke file WAV benar
+                List<Monster> monsters = player.getMonsters();
+                String[] monsterNames = new String[monsters.size()];
+                for (int i = 0; i < monsters.size(); i++) {
+                    monsterNames[i] = monsters.get(i).getName();
+                }
+
+                List<Monster> chosenMonsters = new ArrayList<>();
+                for (int i = 0; i < 3; i++) {
+                    String chosenMonsterName = (String) JOptionPane.showInputDialog(homebaseFrame,
+                            "Pilih monster " + (i + 1) + " untuk pergi ke dungeon:",
+                            "Pilih Monster",
+                            JOptionPane.PLAIN_MESSAGE,
+                            null,
+                            monsterNames,
+                            monsterNames[0]);
+
+                    if (chosenMonsterName != null) {
+                        for (Monster monster : monsters) {
+                            if (monster.getName().equals(chosenMonsterName)) {
+                                chosenMonsters.add(monster);
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if (chosenMonsters.size() == 3) {
+                    player.setDungeonMonsters(chosenMonsters); // Set the chosen monsters to the player
+                    dungeon = new Dungeon();
+                    logAction("Pergi ke dungeon dengan monster: " + chosenMonsters.toString());
+                    JOptionPane.showMessageDialog(homebaseFrame, "Anda pergi ke dungeon!");
+                    showDungeon();
+                    homebaseFrame.dispose();
+                } else {
+                    logAction("Gagal pergi ke dungeon. Harus memilih 3 monster.");
+                    JOptionPane.showMessageDialog(homebaseFrame, "Anda harus memilih 3 monster untuk pergi ke dungeon.");
+                }
+            }
+        });
+
+        keluarButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                playSound(System.getProperty("user.home") + "/Downloads/click_button.wav"); // Pastikan path ke file WAV benar
+                int confirm = JOptionPane.showConfirmDialog(homebaseFrame, "Apakah Anda ingin keluar?", "Keluar", JOptionPane.YES_NO_OPTION);
+                if (confirm == JOptionPane.YES_OPTION) {
+                    logAction("Keluar dari permainan.");
+                    System.exit(0);
+                }
+            }
+        });
+
+        homebasePanel.add(homebaseLabel, BorderLayout.NORTH);
+        homebasePanel.add(buttonPanel, BorderLayout.CENTER);
+
+        homebaseFrame.add(homebasePanel);
+        homebaseFrame.setVisible(true);
+    }
 
     private void showDungeon() {
         JFrame dungeonFrame = new JFrame("Dungeon");
         dungeonFrame.setSize(1366, 768);
         dungeonFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        BackgroundPane1 dungeonPanel = new BackgroundPane1(System.getProperty("user.home") + "/Downloads/pokemon1.jpg");
+        BackgroundPane1 dungeonPanel = new BackgroundPane1(System.getProperty("user.home") + "/Downloads/pokemon Dungeon.jpg");
         dungeonPanel.setLayout(new BorderLayout());
 
         JLabel dungeonLabel = new JLabel("Dungeon");
@@ -459,29 +585,44 @@ private void showHomebase() {
         useItemButton = new JButton("Use Item");
         runButton = new JButton("Run");
 
+        Dimension buttonSize = new Dimension(180, 60); // Slightly larger button size
+
         attackButton.setFont(new java.awt.Font("Tahoma", 1, 25));
-        attackButton.setPreferredSize(new Dimension(150, 50));
+        attackButton.setPreferredSize(buttonSize);
         specialAttackButton.setFont(new java.awt.Font("Tahoma", 1, 25));
-        specialAttackButton.setPreferredSize(new Dimension(150, 50));
+        specialAttackButton.setPreferredSize(buttonSize);
         elementalAttackButton.setFont(new java.awt.Font("Tahoma", 1, 25));
-        elementalAttackButton.setPreferredSize(new Dimension(150, 50));
+        elementalAttackButton.setPreferredSize(buttonSize);
         defendButton.setFont(new java.awt.Font("Tahoma", 1, 25));
-        defendButton.setPreferredSize(new Dimension(150, 50));
+        defendButton.setPreferredSize(buttonSize);
         useItemButton.setFont(new java.awt.Font("Tahoma", 1, 25));
-        useItemButton.setPreferredSize(new Dimension(150, 50));
+        useItemButton.setPreferredSize(buttonSize);
         runButton.setFont(new java.awt.Font("Tahoma", 1, 25));
-        runButton.setPreferredSize(new Dimension(150, 50));
+        runButton.setPreferredSize(buttonSize);
 
-        JPanel battlePanel = new JPanel();
+        battlePanel = new JPanel();
         battlePanel.setOpaque(false);
-        battlePanel.setLayout(new FlowLayout(FlowLayout.CENTER, 100, 30));
+        battlePanel.setLayout(new GridBagLayout()); // Using GridBagLayout for better control
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 20, 10, 20); // Increased padding around buttons
 
-        battlePanel.add(attackButton);
-        battlePanel.add(specialAttackButton);
-        battlePanel.add(elementalAttackButton);
-        battlePanel.add(defendButton);
-        battlePanel.add(useItemButton);
-        battlePanel.add(runButton);
+        // First row (3 buttons)
+        gbc.gridx = 1;
+        gbc.gridy = 0;
+        battlePanel.add(attackButton, gbc);
+        gbc.gridx = 2;
+        battlePanel.add(specialAttackButton, gbc);
+        gbc.gridx = 3;
+        battlePanel.add(elementalAttackButton, gbc);
+
+        // Second row (3 buttons)
+        gbc.gridx = 1;
+        gbc.gridy = 1;
+        battlePanel.add(defendButton, gbc);
+        gbc.gridx = 2;
+        battlePanel.add(useItemButton, gbc);
+        gbc.gridx = 3;
+        battlePanel.add(runButton, gbc);
 
         playerPanel = new JPanel();
         playerPanel.setOpaque(false);
@@ -491,15 +632,41 @@ private void showHomebase() {
         enemyPanel.setOpaque(false);
         enemyPanel.setPreferredSize(new Dimension(200, 200));
 
-        JPanel statusPanel = new JPanel(new BorderLayout());
+        JPanel statusPanel = new JPanel(new GridBagLayout());
         statusPanel.setOpaque(false);
-        statusPanel.add(playerPanel, BorderLayout.WEST);
-        statusPanel.add(battleStatusLabel, BorderLayout.CENTER);
-        statusPanel.add(enemyPanel, BorderLayout.EAST);
+        GridBagConstraints statusGbc = new GridBagConstraints();
+        statusGbc.insets = new Insets(0, 20, 0, 20); // Padding around panels
+        statusGbc.fill = GridBagConstraints.BOTH;
+        statusGbc.weightx = 1.5; // Equal weight for all components
+        statusGbc.weighty = 1.5;
+
+        // Player panel on the left
+        statusGbc.gridx = 0;
+        statusGbc.gridy = 0;
+        statusPanel.add(playerPanel, statusGbc);
+
+        // Battle status label in the center
+        statusGbc.gridx = 1;
+        statusPanel.add(battleStatusLabel, statusGbc);
+
+        // Enemy panel on the right
+        statusGbc.gridx = 2;
+        statusPanel.add(enemyPanel, statusGbc);
+
+        JPanel centerPanel = new JPanel(new GridBagLayout());
+        centerPanel.setOpaque(false);
+        GridBagConstraints centerGbc = new GridBagConstraints();
+        centerGbc.insets = new Insets(50, 50, 100, 50); // Add more padding at the sides and bottom
+        centerGbc.fill = GridBagConstraints.BOTH;
+        centerGbc.gridx = 0;
+        centerGbc.gridy = 0;
+        centerPanel.add(statusPanel, centerGbc);
+
+        centerGbc.gridy = 1;
+        centerPanel.add(battlePanel, centerGbc);
 
         dungeonPanel.add(dungeonLabel, BorderLayout.NORTH);
-        dungeonPanel.add(statusPanel, BorderLayout.CENTER);
-        dungeonPanel.add(battlePanel, BorderLayout.SOUTH);
+        dungeonPanel.add(centerPanel, BorderLayout.CENTER);
 
         dungeonFrame.add(dungeonPanel);
         dungeonFrame.setVisible(true);
@@ -514,156 +681,277 @@ private void showHomebase() {
         }
     }
 
-    private void encounterWildMonster(JFrame dungeonFrame, Monster wildMonster, List<Monster> remainingWildMonsters) {
-    JOptionPane.showMessageDialog(dungeonFrame, "Monster anda sekarang adalah " + player.getCurrentMonster().getName() + ". Bertemu dengan " + wildMonster.getName());
-    updateBattleStatus(player.getCurrentMonster(), wildMonster);
+    private void addAttackEffect(JPanel panel) {
+        final int originalX = panel.getX();
+        final int originalY = panel.getY();
+        final int amplitude = 10; // shake amplitude
+        final int delay = 50; // milliseconds
 
-    playerPanel.removeAll();
-    playerPanel.add(new MonsterPanel(player.getCurrentMonster()));
-    playerPanel.revalidate();
-    playerPanel.repaint();
+        Timer timer = new Timer(delay, new ActionListener() {
+            int count = 0;
+            boolean direction = true; // true for right, false for left
 
-    enemyPanel.removeAll();
-    enemyPanel.add(new MonsterPanel(wildMonster));
-    enemyPanel.revalidate();
-    enemyPanel.repaint();
-
-    // Clear existing action listeners
-    clearActionListeners(attackButton);
-    clearActionListeners(specialAttackButton);
-    clearActionListeners(elementalAttackButton);
-    clearActionListeners(defendButton);
-    clearActionListeners(useItemButton);
-    clearActionListeners(runButton);
-
-    attackButton.addActionListener(new ActionListener() {
-        public void actionPerformed(ActionEvent e) {
-            String log = player.getCurrentMonster().attack(wildMonster);
-            appendBattleLog(log);
-            logToFile(log);
-            JOptionPane.showMessageDialog(dungeonFrame, log); // Show action result
-            checkBattleOutcome(dungeonFrame, wildMonster, remainingWildMonsters);
-            addEffect(playerPanel, enemyPanel);
-        }
-    });
-
-    specialAttackButton.addActionListener(new ActionListener() {
-        public void actionPerformed(ActionEvent e) {
-            String log = player.getCurrentMonster().specialAttack(wildMonster);
-            appendBattleLog(log);
-            logToFile(log);
-            JOptionPane.showMessageDialog(dungeonFrame, log); // Show action result
-            checkBattleOutcome(dungeonFrame, wildMonster, remainingWildMonsters);
-            addEffect(playerPanel, enemyPanel);
-        }
-    });
-
-    elementalAttackButton.addActionListener(new ActionListener() {
-        public void actionPerformed(ActionEvent e) {
-            String log = player.getCurrentMonster().elementalAttack(wildMonster);
-            appendBattleLog(log);
-            logToFile(log);
-            JOptionPane.showMessageDialog(dungeonFrame, log); // Show action result
-            checkBattleOutcome(dungeonFrame, wildMonster, remainingWildMonsters);
-            addEffect(playerPanel, enemyPanel);
-        }
-    });
-
-    defendButton.addActionListener(new ActionListener() {
-        public void actionPerformed(ActionEvent e) {
-            String log = player.getCurrentMonster().defend();
-            appendBattleLog(log);
-            logToFile(log);
-            JOptionPane.showMessageDialog(dungeonFrame, log); // Show action result
-            addEffect(playerPanel, enemyPanel);
-        }
-    });
-
-    useItemButton.addActionListener(new ActionListener() {
-        public void actionPerformed(ActionEvent e) {
-            List<Item> inventory = player.getInventory();
-            if (inventory.isEmpty()) {
-                String log = "No items available!";
-                appendBattleLog(log);
-                logToFile(log);
-                JOptionPane.showMessageDialog(dungeonFrame, log); // Show action result
-            } else {
-                JComboBox<String> itemComboBox = new JComboBox<>();
-                for (Item item : inventory) {
-                    itemComboBox.addItem(item.getType());
-                }
-                JButton confirmButton = new JButton("Use Item");
-
-                JPanel itemPanel = new JPanel();
-                itemPanel.add(itemComboBox);
-                itemPanel.add(confirmButton);
-
-                enemyPanel.removeAll();
-                enemyPanel.add(itemPanel);
-                enemyPanel.revalidate();
-                enemyPanel.repaint();
-
-                confirmButton.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
-                        String chosenItem = (String) itemComboBox.getSelectedItem();
-                        for (Item item : inventory) {
-                            if (item.getType().equals(chosenItem)) {
-                                player.useItem(item);
-                                String log = "Item " + chosenItem + " digunakan!";
-                                appendBattleLog(log);
-                                logToFile(log);
-                                JOptionPane.showMessageDialog(dungeonFrame, log); // Show action result
-                                break;
-                            }
-                        }
-                        // After using the item, remove the item panel
-                        enemyPanel.remove(itemPanel);
-                        enemyPanel.revalidate();
-                        enemyPanel.repaint();
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (count < 6) { // shake 3 times
+                    if (direction) {
+                        panel.setLocation(originalX + amplitude, originalY);
+                    } else {
+                        panel.setLocation(originalX - amplitude, originalY);
                     }
-                });
+                    direction = !direction;
+                    count++;
+                } else {
+                    panel.setLocation(originalX, originalY); // reset to original position
+                    ((Timer) e.getSource()).stop();
+                }
             }
-        }
-    });
-
-    runButton.addActionListener(new ActionListener() {
-        public void actionPerformed(ActionEvent e) {
-            Random random = new Random();
-            String log;
-            if (random.nextDouble() > 0.5) {
-                log = player.getCurrentMonster().getName() + " berhasil melarikan diri!";
-                appendBattleLog(log);
-                logToFile(log);
-                JOptionPane.showMessageDialog(dungeonFrame, log); // Show action result
-                dungeonFrame.dispose();
-                showHomebase();
-            } else {
-                log = "Failed to run away!";
-                appendBattleLog(log);
-                logToFile(log);
-                JOptionPane.showMessageDialog(dungeonFrame, log); // Show action result
-            }
-        }
-    });
-}
-
-private void clearActionListeners(JButton button) {
-    ActionListener[] listeners = button.getActionListeners();
-    for (ActionListener listener : listeners) {
-        button.removeActionListener(listener);
+        });
+        timer.start();
     }
-}
+
+    private void encounterWildMonster(JFrame dungeonFrame, Monster wildMonster, List<Monster> remainingWildMonsters) {
+        JOptionPane.showMessageDialog(dungeonFrame, "Monster anda sekarang adalah " + player.getCurrentMonster().getName() + ". Bertemu dengan " + wildMonster.getName());
+        updateBattleStatus(player.getCurrentMonster(), wildMonster);
+
+        playerPanel.removeAll();
+        playerPanel.add(new MonsterPanel(player.getCurrentMonster()));
+        playerPanel.revalidate();
+        playerPanel.repaint();
+
+        enemyPanel.removeAll();
+        if (wildMonster != null) {
+            enemyPanel.add(new MonsterPanel(wildMonster));
+        }
+        enemyPanel.revalidate();
+        enemyPanel.repaint();
+
+        // Clear existing action listeners
+        clearActionListeners(attackButton);
+        clearActionListeners(specialAttackButton);
+        clearActionListeners(elementalAttackButton);
+        clearActionListeners(defendButton);
+        clearActionListeners(useItemButton);
+        clearActionListeners(runButton);
+
+        attackButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                playSound(System.getProperty("user.home") + "/Downloads/click_button.wav"); // Pastikan path ke file WAV benar
+                addAttackEffect(enemyPanel); // Add shaking effect on attack
+                String log = player.getCurrentMonster().attack(wildMonster);
+                appendBattleLog(log);
+                logToFile(log);
+                JOptionPane.showMessageDialog(dungeonFrame, log); // Show action result
+                checkBattleOutcome(dungeonFrame, wildMonster, remainingWildMonsters);
+                addEffect(playerPanel, enemyPanel);
+                if (wildMonster.getHealthPoints() > 0) {
+                    wildMonsterAttacks(dungeonFrame, wildMonster);
+                }
+            }
+        });
+
+        specialAttackButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                playSound(System.getProperty("user.home") + "/Downloads/click_button.wav"); // Pastikan path ke file WAV benar
+                addAttackEffect(enemyPanel); // Add shaking effect on attack
+                String log = player.getCurrentMonster().specialAttack(wildMonster);
+                appendBattleLog(log);
+                logToFile(log);
+                JOptionPane.showMessageDialog(dungeonFrame, log); // Show action result
+                checkBattleOutcome(dungeonFrame, wildMonster, remainingWildMonsters);
+                addEffect(playerPanel, enemyPanel);
+                if (wildMonster.getHealthPoints() > 0) {
+                    wildMonsterAttacks(dungeonFrame, wildMonster);
+                }
+            }
+        });
+
+        elementalAttackButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                playSound(System.getProperty("user.home") + "/Downloads/click_button.wav"); // Pastikan path ke file WAV benar
+                addAttackEffect(enemyPanel); // Add shaking effect on attack
+                String log = player.getCurrentMonster().elementalAttack(wildMonster);
+                appendBattleLog(log);
+                logToFile(log);
+                JOptionPane.showMessageDialog(dungeonFrame, log); // Show action result
+                checkBattleOutcome(dungeonFrame, wildMonster, remainingWildMonsters);
+                addEffect(playerPanel, enemyPanel);
+                if (wildMonster.getHealthPoints() > 0) {
+                    wildMonsterAttacks(dungeonFrame, wildMonster);
+                }
+            }
+        });
+
+        defendButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                playSound(System.getProperty("user.home") + "/Downloads/click_button.wav"); // Pastikan path ke file WAV benar
+                String log = player.getCurrentMonster().defend();
+                player.getCurrentMonster().setDefending(true); // Set defending flag
+                appendBattleLog(log);
+                logToFile(log);
+                JOptionPane.showMessageDialog(dungeonFrame, log); // Show action result
+                // Wild monster attacks immediately after player defends
+                wildMonsterAttacks(dungeonFrame, wildMonster);
+            }
+        });
+
+//useItemButton.addActionListener(new ActionListener() {
+//    public void actionPerformed(ActionEvent e) {
+//        playSound(System.getProperty("user.home") + "/Downloads/click_button.wav"); // Pastikan path ke file WAV benar
+//        List<Item> inventory = player.getInventory();
+//        if (inventory.isEmpty()) {
+//            String log = "No items available!";
+//            appendBattleLog(log);
+//            logToFile(log);
+//            JOptionPane.showMessageDialog(dungeonFrame, log); // Show action result
+//        } else {
+//            ItemSelectionDialog itemDialog = new ItemSelectionDialog(dungeonFrame, player, player.getCurrentMonster());
+//            itemDialog.setVisible(true);
+//        }
+//    }
+//});
+
+useItemButton.addActionListener(new ActionListener() {
+    public void actionPerformed(ActionEvent e) {
+        playSound(System.getProperty("user.home") + "/Downloads/click_button.wav"); // Pastikan path ke file WAV benar
+        
+        List<Item> inventory = player.getInventory();
+        if (inventory.isEmpty()) {
+            String log = "No items available!";
+            appendBattleLog(log);
+            logToFile(log);
+            JOptionPane.showMessageDialog(dungeonFrame, log); // Show action result
+        } else {
+            // Menampilkan dialog pemilihan item
+            String[] itemNames = inventory.stream().map(Item::getType).toArray(String[]::new);
+            String selectedItem = (String) JOptionPane.showInputDialog(
+                dungeonFrame,
+                "Pilih item yang akan digunakan:",
+                "Gunakan Item",
+                JOptionPane.PLAIN_MESSAGE,
+                null,
+                itemNames,
+                itemNames[0]
+            );
+
+            if (selectedItem != null) {
+                // Menggunakan item yang dipilih
+                Item item = inventory.stream()
+                    .filter(i -> i.getType().equals(selectedItem))
+                    .findFirst()
+                    .orElse(null);
+
+                if (item != null) {
+                    player.useItem(item);
+                    logAction("Menggunakan " + item.getType() + " untuk " + player.getCurrentMonster().getName());
+                    JOptionPane.showMessageDialog(dungeonFrame, item.getType() + " digunakan!");
+                    ((MonsterPanel) playerPanel.getComponent(0)).updateHealthBar();
+                } else {
+                    logAction("Tidak ada " + selectedItem + " tersedia.");
+                    JOptionPane.showMessageDialog(dungeonFrame, "Tidak ada " + selectedItem + " tersedia.");
+                }
+            }
+        }
+    }
+});
 
 
-    private void checkBattleOutcome(JFrame dungeonFrame, Monster wildMonster, List<Monster> remainingWildMonsters) {
-    if (player.getCurrentMonster().getHealthPoints() <= 0) {
-        String log = "Semua monster Anda telah dikalahkan!";
+        runButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                playSound(System.getProperty("user.home") + "/Downloads/click_button.wav"); // Pastikan path ke file WAV benar
+                Random random = new Random();
+                String log;
+                if (random.nextDouble() > 0.5) {
+                    log = player.getCurrentMonster().getName() + " successfully ran away!";
+                    appendBattleLog(log);
+                    logToFile(log);
+                    JOptionPane.showMessageDialog(dungeonFrame, log); // Show action result
+                    dungeonFrame.dispose();
+                    showHomebase();
+                } else {
+                    log = "Failed to run away!";
+                    appendBattleLog(log);
+                    logToFile(log);
+                    JOptionPane.showMessageDialog(dungeonFrame, log); // Show action result
+                    wildMonsterAttacks(dungeonFrame, wildMonster); // Wild monster attacks if the player fails to run
+                }
+            }
+        });
+    }
+
+    private void wildMonsterAttacks(JFrame dungeonFrame, Monster wildMonster) {
+        Random random = new Random();
+        int attackType = random.nextInt(4); // 0: attack, 1: special attack, 2: elemental attack, 3: defend
+        String log;
+        switch (attackType) {
+            case 0:
+                log = wildMonster.attack(player.getCurrentMonster());
+                addAttackEffect(playerPanel); // Add shaking effect on player panel
+                break;
+            case 1:
+                log = wildMonster.specialAttack(player.getCurrentMonster());
+                addAttackEffect(playerPanel); // Add shaking effect on player panel
+                break;
+            case 2:
+                log = wildMonster.elementalAttack(player.getCurrentMonster());
+                addAttackEffect(playerPanel); // Add shaking effect on player panel
+                break;
+            case 3:
+                log = wildMonster.defend();
+                wildMonster.setDefending(true); // Set defending flag
+                break;
+            default:
+                log = "Unknown action!";
+                break;
+        }
         appendBattleLog(log);
         logToFile(log);
         JOptionPane.showMessageDialog(dungeonFrame, log); // Show action result
-        JOptionPane.showMessageDialog(dungeonFrame, "Semua monster Anda telah dikalahkan!");
-        System.exit(0);
+
+        checkBattleOutcome(dungeonFrame, wildMonster, new ArrayList<>());
+        addEffect(enemyPanel, playerPanel);
+        player.getCurrentMonster().resetDefending(); // Reset defending state after attack
+    }
+
+    private void clearActionListeners(JButton button) {
+        ActionListener[] listeners = button.getActionListeners();
+        for (ActionListener listener : listeners) {
+            button.removeActionListener(listener);
+        }
+    }
+
+    private void checkBattleOutcome(JFrame dungeonFrame, Monster wildMonster, List<Monster> remainingWildMonsters) {
+    if (player.getCurrentMonster().getHealthPoints() <= 0) {
+        player.getCurrentMonster().setHealthPoints(0); // Ensure HP does not go below 0
+        String log = player.getCurrentMonster().getName() + " dikalahkan dan dibawa kembali ke homebase!";
+        appendBattleLog(log);
+        logToFile(log);
+        JOptionPane.showMessageDialog(dungeonFrame, log); // Show action result
+
+        player.removeCurrentMonster();
+
+        if (player.getMonsters().isEmpty()) {
+            String endLog = "Semua monster Anda telah dikalahkan!";
+            appendBattleLog(endLog);
+            logToFile(endLog);
+            JOptionPane.showMessageDialog(dungeonFrame, endLog); // Show action result
+            System.exit(0);
+        } else {
+            Monster nextMonster = player.getCurrentMonster();
+            String switchLog = "Monster berikutnya adalah " + nextMonster.getName();
+            appendBattleLog(switchLog);
+            logToFile(switchLog);
+            JOptionPane.showMessageDialog(dungeonFrame, switchLog); // Show switch result
+            updateBattleStatus(nextMonster, wildMonster);
+
+            playerPanel.removeAll();
+            MonsterPanel playerMonsterPanel = new MonsterPanel(nextMonster);
+            playerPanel.add(playerMonsterPanel);
+            playerPanel.revalidate();
+            playerPanel.repaint();
+        }
     } else if (wildMonster.getHealthPoints() <= 0) {
+        wildMonster.setHealthPoints(0); // Ensure HP does not go below 0
         String log = wildMonster.getName() + " dikalahkan!";
         appendBattleLog(log);
         logToFile(log);
@@ -694,8 +982,13 @@ private void clearActionListeners(JButton button) {
             showHomebase();
         }
     }
-}
 
+    // Update health bar
+    ((MonsterPanel) playerPanel.getComponent(0)).updateHealthBar();
+    if (enemyPanel.getComponentCount() > 0) {
+        ((MonsterPanel) enemyPanel.getComponent(0)).updateHealthBar();
+    }
+}
 
 
     private void logToFile(String log) {
@@ -707,12 +1000,55 @@ private void clearActionListeners(JButton button) {
         }
     }
 
+    private void createDirectoriesIfNotExist(Path path) {
+        if (Files.notExists(path)) {
+            try {
+                Files.createDirectories(path);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+    
+    public void logAction(String action) {
+        try {
+            createDirectoriesIfNotExist(logFilePath.getParent());
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(logFilePath.toString(), true))) {
+                writer.write(action + "\n");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     private void updateBattleStatus(Monster playerMonster, Monster wildMonster) {
         if (wildMonster != null) {
             battleStatusLabel.setText("Monster anda (" + playerMonster.getName() + ") sedang melawan (" + wildMonster.getName() + ")");
         } else {
             battleStatusLabel.setText("Monster anda (" + playerMonster.getName() + ") tidak melawan apapun");
         }
+
+        playerPanel.removeAll();
+        MonsterPanel playerMonsterPanel = new MonsterPanel(playerMonster);
+        playerPanel.add(playerMonsterPanel);
+        String playerElement = (playerMonster.getElement() != null) ? playerMonster.getElement().toString() : "Unknown";
+        JLabel playerMonsterLabel = new JLabel(playerMonster.getName() + " (" + playerElement + ") - HP: " + playerMonster.getHealthPoints());
+        playerMonsterLabel.setForeground(Color.WHITE); // Mengatur warna teks menjadi putih
+        playerPanel.add(playerMonsterLabel);
+        playerPanel.revalidate();
+        playerPanel.repaint();
+
+        enemyPanel.removeAll();
+        if (wildMonster != null) {
+            MonsterPanel wildMonsterPanel = new MonsterPanel(wildMonster);
+            enemyPanel.add(wildMonsterPanel);
+            String wildElement = (wildMonster.getElement() != null) ? wildMonster.getElement().toString() : "Unknown";
+            JLabel wildMonsterLabel = new JLabel(wildMonster.getName() + " (" + wildElement + ") - HP: " + wildMonster.getHealthPoints());
+            wildMonsterLabel.setForeground(Color.WHITE); // Mengatur warna teks menjadi putih
+            enemyPanel.add(wildMonsterLabel);
+        }
+        enemyPanel.revalidate();
+        enemyPanel.repaint();
     }
 
     private void appendBattleLog(String message) {
@@ -760,6 +1096,7 @@ private void clearActionListeners(JButton button) {
             + "- Simpan permainan Anda secara teratur untuk menghindari kehilangan progres.\n\n"
             + "Selamat bermain dan semoga berhasil!";
     
+        logAction("Menampilkan bantuan permainan.");
         JOptionPane.showMessageDialog(this, bantuan, "Bantuan Permainan", JOptionPane.INFORMATION_MESSAGE);
     }
 
@@ -767,6 +1104,7 @@ private void clearActionListeners(JButton button) {
         JFrame frame = new JFrame("EXIT");
         
         if(JOptionPane.showConfirmDialog(frame, "Do you want to exit?", "GAME POKEMON", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_NO_OPTION){
+            logAction("Keluar dari permainan.");
             System.exit(0);
         }
     }
